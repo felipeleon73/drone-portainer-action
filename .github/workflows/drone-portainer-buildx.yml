@@ -1,0 +1,55 @@
+name: drone-portainer-buildx
+
+on:
+  schedule:
+        - cron: "15 0 * * Sun"
+  workflow_dispatch:
+  
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: clone https://github.com/robkaandorp/drone-portainer
+        uses: actions/checkout@master
+        with:
+          name: robkaandorp/drone-portainer 
+          repository: robkaandorp/drone-portainer
+          path: ./drone-portainer
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build and push filippobozzi73/drone-portainer
+        uses: docker/build-push-action@v2
+        with:
+          context: ./drone-portainer
+          file: ./drone-portainer/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: filippobozzi73/drone-portainer:latest
+      - 
+        name: Get drone-portainer version
+        id: version
+        uses: addnab/docker-run-action@v3
+        with:
+          image: filippobozzi73/drone-portainer:latest
+          run: echo "::set-output name=version::$(drone-portainer --version | tail -1 | awk '{print $2}')"
+      -
+        name: Build and push filippobozzi73/drone-portainer
+        uses: docker/build-push-action@v2
+        with:
+          context: ./drone-portainer
+          file: ./drone-portainer/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: filippobozzi73/drone-portainer:latest,filippobozzi73/drone-portainer:${{ steps.version.outputs.version }}
