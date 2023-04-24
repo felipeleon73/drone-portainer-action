@@ -37,19 +37,3 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: filippobozzi73/drone-portainer:latest
-      - 
-        name: Get drone-portainer version
-        id: version
-        uses: addnab/docker-run-action@v3
-        with:
-          image: filippobozzi73/drone-portainer:latest
-          run: echo "::set-output name=version::$(drone-portainer --version | tail -1 | awk '{print $2}')"
-      -
-        name: Build and push filippobozzi73/drone-portainer
-        uses: docker/build-push-action@v2
-        with:
-          context: ./drone-portainer
-          file: ./drone-portainer/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: filippobozzi73/drone-portainer:latest,filippobozzi73/drone-portainer:${{ steps.version.outputs.version }}
